@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "xp-rituals",
+  "id": "xp_rituals",
   "version": "${version}",
 
   "name": "XP Rituals",
@@ -14,7 +14,7 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/xp-rituals/icon.png",
+  "icon": "assets/xp_rituals/icon.png",
 
   "environment": "*",
   "entrypoints": {

@@ -7,11 +7,11 @@ import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.util.registry.Registry
 import org.apache.logging.log4j.LogManager
-import org.dimdev.matrix.Matrix
 
 
 object XpRituals {
 	private val logger = LogManager.getLogger();
+	public const val modid = "xp_rituals"
 
 	public fun common() {
 		logger.info("Loading XP Rituals");
