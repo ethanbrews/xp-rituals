@@ -3,7 +3,6 @@ package me.ethanbrews.xprituals.common.item
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.item.ItemStack
 import net.minecraft.item.SwordItem
-import net.minecraft.item.ToolMaterial
 import net.minecraft.item.ToolMaterials
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText

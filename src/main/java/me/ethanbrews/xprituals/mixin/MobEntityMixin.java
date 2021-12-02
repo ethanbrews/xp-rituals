@@ -5,8 +5,9 @@ import net.minecraft.entity.mob.MobEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+// The class must implement an interface, so it can be cast to in the rest of the program.
 @Mixin(MobEntity.class)
-public abstract class MobEntityMixin implements IMixedMobEntity {
+public class MobEntityMixin implements IMixedMobEntity {
     @Shadow
     protected int experiencePoints;
 

@@ -1,14 +1,13 @@
 package me.ethanbrews.xprituals.common.item
 
 import me.ethanbrews.xprituals.XpRituals
+import me.ethanbrews.xprituals.util.RegistryHelper.id
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 
 object ModItems {
-    fun id(name: String): Identifier = Identifier(XpRituals.modid, name)
-
     val xp_stick = XpStick()
-    val guide_book = GuideBook()
+    //val guide_book = GuideBook()
 
     fun registerItems() {
         Registry.register(Registry.ITEM, id("xp_stick"), xp_stick)

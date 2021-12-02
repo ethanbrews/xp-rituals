@@ -2,6 +2,8 @@ package me.ethanbrews.xprituals;
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
+import me.ethanbrews.xprituals.client.blockrenderer.BlockRenderers
+import me.ethanbrews.xprituals.common.block.ModBlocks
 import me.ethanbrews.xprituals.common.item.ModItems
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback
 import net.minecraft.server.command.ServerCommandSource
@@ -16,6 +18,7 @@ object XpRituals {
 	public fun common() {
 		logger.info("Loading XP Rituals");
 		ModItems.registerItems()
+		ModBlocks.registerBlocks()
 		CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback {
 			dispatcher: CommandDispatcher<ServerCommandSource?>?, dedicated: Boolean ->
 			run {
@@ -29,6 +32,7 @@ object XpRituals {
 
 	public fun client() {
 		logger.info("Loading XP Rituals (Client)");
+		BlockRenderers.initBlockRenderers()
 	}
 
 	public fun server() {
