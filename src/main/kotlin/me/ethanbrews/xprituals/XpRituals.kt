@@ -5,6 +5,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
 import me.ethanbrews.xprituals.client.blockrenderer.BlockRenderers
 import me.ethanbrews.xprituals.common.block.ModBlocks
 import me.ethanbrews.xprituals.common.item.ModItems
+import me.ethanbrews.xprituals.common.network.Packets
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.util.registry.Registry
@@ -33,6 +34,7 @@ object XpRituals {
 	public fun client() {
 		logger.info("Loading XP Rituals (Client)");
 		BlockRenderers.initBlockRenderers()
+		Packets.registerClient()
 	}
 
 	public fun server() {
