@@ -1,7 +1,7 @@
-package me.ethanbrews.xprituals.common.network
+package me.ethanbrews.xprituals.network
 
 import me.ethanbrews.xprituals.XpRituals.modid
-import me.ethanbrews.xprituals.common.blockentity.EnchantPedestalEntity
+import me.ethanbrews.xprituals.block.enchantPedestal.EnchantPedestalEntity
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs
 import net.fabricmc.fabric.api.networking.v1.PacketSender
@@ -15,7 +15,6 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
-import org.jetbrains.annotations.NotNull
 
 
 enum class BlockEntityUpdatePacketID {

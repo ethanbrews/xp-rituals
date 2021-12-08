@@ -1,8 +1,7 @@
-package me.ethanbrews.xprituals.client.blockrenderer
+package me.ethanbrews.xprituals.registry
 
 import dev.architectury.registry.client.rendering.BlockEntityRendererRegistry
-import me.ethanbrews.xprituals.common.block.ModBlocks
-import me.ethanbrews.xprituals.common.item.ModItems
+import me.ethanbrews.xprituals.block.enchantPedestal.EnchantPedestalRenderer
 
 object BlockRenderers {
     fun initBlockRenderers() {

@@ -1,6 +1,6 @@
-package me.ethanbrews.xprituals.common.item
+package me.ethanbrews.xprituals.item
 
-import me.ethanbrews.xprituals.util.RegistryHelper.id
+import me.ethanbrews.fabric.RegistryHelper.id
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack

@@ -1,7 +1,7 @@
-package me.ethanbrews.xprituals.common.extensions
+package me.ethanbrews.xprituals.extensions
 
 import me.ethanbrews.xprituals.IMixedMobEntity
-import me.ethanbrews.xprituals.common.item.ModItems
+import me.ethanbrews.xprituals.item.ModItems
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ExperienceOrbEntity
 import net.minecraft.entity.mob.MobEntity

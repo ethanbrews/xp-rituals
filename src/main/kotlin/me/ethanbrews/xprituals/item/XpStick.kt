@@ -1,4 +1,4 @@
-package me.ethanbrews.xprituals.common.item
+package me.ethanbrews.xprituals.item
 
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.item.ItemStack

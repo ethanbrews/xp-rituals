@@ -1,10 +1,10 @@
-package me.ethanbrews.xprituals.common.block
+package me.ethanbrews.xprituals.registry
 
-import me.ethanbrews.xprituals.common.blockentity.EnchantPedestalEntity
-import me.ethanbrews.xprituals.util.RegistryHelper.id
+import me.ethanbrews.xprituals.block.enchantPedestal.EnchantPedestalEntity
+import me.ethanbrews.xprituals.block.enchantPedestal.EnchantPedestal
+import me.ethanbrews.fabric.RegistryHelper.id
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.registry.Registry

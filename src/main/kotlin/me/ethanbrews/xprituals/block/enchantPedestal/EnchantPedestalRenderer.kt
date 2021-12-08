@@ -1,14 +1,11 @@
-package me.ethanbrews.xprituals.client.blockrenderer
+package me.ethanbrews.xprituals.block.enchantPedestal
 
-import me.ethanbrews.xprituals.common.blockentity.EnchantPedestalEntity
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.WorldRenderer
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.model.json.ModelTransformation
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3f.POSITIVE_Y
 import kotlin.math.sin
 

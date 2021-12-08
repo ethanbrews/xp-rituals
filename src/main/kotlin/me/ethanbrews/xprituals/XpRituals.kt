@@ -2,13 +2,13 @@ package me.ethanbrews.xprituals;
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
-import me.ethanbrews.xprituals.client.blockrenderer.BlockRenderers
-import me.ethanbrews.xprituals.common.block.ModBlocks
-import me.ethanbrews.xprituals.common.item.ModItems
-import me.ethanbrews.xprituals.common.network.Packets
+import me.ethanbrews.xprituals.item.ModItems
+import me.ethanbrews.xprituals.network.Packets
+import me.ethanbrews.xprituals.registry.BlockRenderers
+import me.ethanbrews.xprituals.registry.ModBlocks
+import me.ethanbrews.xprituals.registry.ModEnchantments
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.util.registry.Registry
 import org.apache.logging.log4j.LogManager
 
 
@@ -20,6 +20,7 @@ object XpRituals {
 		logger.info("Loading XP Rituals");
 		ModItems.registerItems()
 		ModBlocks.registerBlocks()
+		ModEnchantments.registerEnchantments()
 		CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback {
 			dispatcher: CommandDispatcher<ServerCommandSource?>?, dedicated: Boolean ->
 			run {

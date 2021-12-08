@@ -1,6 +1,6 @@
-package me.ethanbrews.xprituals.common.block
+package me.ethanbrews.xprituals.block.enchantPedestal
 
-import me.ethanbrews.xprituals.common.blockentity.EnchantPedestalEntity
+import me.ethanbrews.xprituals.registry.ModBlocks
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -36,6 +36,18 @@ class EnchantPedestal : BlockWithEntity(Settings.of(Material.STONE)) {
             )
         }
     }
+
+    //TODO: This causes a crash :(
+    /*override fun getOutlineShape(
+        state: BlockState?,
+        world: BlockView?,
+        pos: BlockPos?,
+        context: ShapeContext?
+    ): VoxelShape = VoxelShapes.combine(
+        VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, 0.0625, 1.0),
+        VoxelShapes.cuboid(0.2, 0.0, 2.0, 0.8, 1.0, 0.8),
+        BooleanBiFunction.AND
+    )*/
 
     override fun onUse(
         state: BlockState,

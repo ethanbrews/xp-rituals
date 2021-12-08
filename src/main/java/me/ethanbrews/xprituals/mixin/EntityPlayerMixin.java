@@ -1,6 +1,6 @@
 package me.ethanbrews.xprituals.mixin;
 
-import me.ethanbrews.xprituals.common.extensions.PlayerEntityExtensions;
+import me.ethanbrews.xprituals.extensions.PlayerEntityExtensions;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;

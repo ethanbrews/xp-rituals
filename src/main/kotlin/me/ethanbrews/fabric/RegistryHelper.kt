@@ -1,4 +1,4 @@
-package me.ethanbrews.xprituals.util
+package me.ethanbrews.fabric
 
 import me.ethanbrews.xprituals.XpRituals
 import net.minecraft.util.Identifier
