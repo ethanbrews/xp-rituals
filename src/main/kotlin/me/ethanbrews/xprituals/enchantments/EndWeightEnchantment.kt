@@ -10,7 +10,6 @@ import net.minecraft.entity.mob.EndermanEntity
 
 /**
  *  TODO: Give players the 'End Weight' effect to prevent ender pearls from working whilst effected.
- *  TODO: Use EndermanMixin to prevent endermen from teleporting once attacked with an enchanted weapon
  */
 class EndWeightEnchantment : Enchantment(
     Rarity.VERY_RARE,
@@ -25,8 +24,8 @@ class EndWeightEnchantment : Enchantment(
     override fun canAccept(other: Enchantment?): Boolean = true
 
     override fun onTargetDamaged(user: LivingEntity?, target: Entity?, level: Int) {
-        if (target is EndermanEntity) {
-            (target as IMixedEndermanEntity).canTeleport = false
+        if (target is IMixedEndermanEntity) {
+            target.canTeleport = false
         } else {
             //TODO: Effect [target] with the as-yet unimplemented [EndWeightEffect]
         }

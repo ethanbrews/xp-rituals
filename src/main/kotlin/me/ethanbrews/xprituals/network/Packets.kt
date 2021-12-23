@@ -45,7 +45,7 @@ object Packets {
         val buf = PacketByteBufs.create()
         buf.writeBlockPos(entity.pos)
         buf.writeString(packetID.toString())
-        buf.writeNbt(entity.writeNbt(NbtCompound()))
+        buf.writeNbt(entity.createNbt())
 
         for (player in PlayerLookup.tracking(entity.world as ServerWorld?, entity.pos)) {
             ServerPlayNetworking.send(player, UPDATE_BLOCK_ENTITY_PACKET, buf)

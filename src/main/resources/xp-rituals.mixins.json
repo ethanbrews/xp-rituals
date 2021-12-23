@@ -1,13 +1,13 @@
 {
   "required": true,
   "package": "me.ethanbrews.xprituals.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "MobEntityMixin",
-    "EntityPlayerMixin"
+    "EntityPlayerMixin",
+    "LivingEntityMixin",
+    "MobEntityMixin"
   ],
   "client": [
-
   ],
   "injectors": {
     "defaultRequire": 1

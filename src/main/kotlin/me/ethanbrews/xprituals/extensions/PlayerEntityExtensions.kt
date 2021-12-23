@@ -1,7 +1,7 @@
 package me.ethanbrews.xprituals.extensions
 
 import me.ethanbrews.xprituals.IMixedMobEntity
-import me.ethanbrews.xprituals.item.ModItems
+import me.ethanbrews.xprituals.registry.ModItems
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ExperienceOrbEntity
 import net.minecraft.entity.mob.MobEntity
@@ -14,7 +14,7 @@ object PlayerEntityExtensions {
     val logger = LogManager.getLogger()
 
     fun onPlayerAttack(player: PlayerEntity, target: Entity) {
-        if (player.isHolding(ModItems.xp_stick) && target is MobEntity) {
+        if (player.isHolding(ModItems.tier1Staff) && target is MobEntity) {
             val exp: Int = (target as IMixedMobEntity).experiencePoints;
             val toDrop = if (exp < 5) {
                 exp

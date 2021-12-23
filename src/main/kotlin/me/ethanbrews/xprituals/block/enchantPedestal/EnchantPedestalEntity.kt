@@ -1,85 +1,297 @@
 package me.ethanbrews.xprituals.block.enchantPedestal
 
-import me.ethanbrews.xprituals.registry.ModEnchantments
-import me.ethanbrews.xprituals.item.ModItems
-import me.ethanbrews.xprituals.item.XpStick
+import me.ethanbrews.xprituals.item.StaffOfKnowledge
 import me.ethanbrews.xprituals.network.BlockEntityUpdatePacketID
 import me.ethanbrews.xprituals.network.Packets
-import me.ethanbrews.xprituals.recipe.EnchantPedestalRecipe
 import me.ethanbrews.fabric.BlockPosHelper
+import me.ethanbrews.fabric.ExperienceHelper
+import me.ethanbrews.fabric.blockentity.MultiBlockEntityWithEvent
+import me.ethanbrews.xprituals.item.IStaff
+import me.ethanbrews.xprituals.item.StaffOfDebugging
+import me.ethanbrews.xprituals.recipe.EnchantPedestalRecipes
 import me.ethanbrews.xprituals.registry.ModBlocks
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.ExperienceOrbEntity
+import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.particle.ParticleTypes
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.text.LiteralText
 import net.minecraft.util.ActionResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import org.apache.logging.log4j.LogManager
+import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.max
+import kotlin.math.sin
 import kotlin.random.Random
 
-
-class EnchantPedestalEntity(pos: BlockPos, state: BlockState) : BlockEntity(ModBlocks.enchant_pedestal_entity, pos, state) {
+class EnchantPedestalEntity(pos: BlockPos, state: BlockState) : MultiBlockEntityWithEvent<EnchantPedestalEntity, EnchantPedestalEvent>(ModBlocks.enchant_pedestal_entity, pos, state) {
     private val logger = LogManager.getLogger()
-    var inventory = SimpleInventory(1)
-    var tickCounter = 0
-    var targetPedestal: EnchantPedestalEntity? = null
+    private var _inventory = SimpleInventory(1)
 
-    var serverProviderEnchantPedestals: List<EnchantPedestalEntity>? = null
-    var serverCurrentRecipe: EnchantPedestalRecipe? = null
+    // The stack in the inventory. It's only got one slot
+    var stack: ItemStack
+        get() = _inventory.getStack(0)
+        set(value) { _inventory.setStack(0, value) }
 
-    override fun writeNbt(nbt: NbtCompound): NbtCompound {
+    override fun setWorld(world: World?) {
+        super.setWorld(world)
+        init()
+    }
+
+    override fun markRemoved() {
+        super.markRemoved()
+        isLoaded = false
+        isValid = false
+        if (world?.isClient == false) {
+            master?.event?.cancel()
+
+            if (!stack.isEmpty)
+                world?.let { w -> w.spawnEntity(ItemEntity(w, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack)) }
+
+            if (!isMaster)
+                master?.init()
+        }
+
+        others.forEach { other ->
+            other.othersPos = other.othersPos.filter { it != pos }
+            other.masterPos = if (isMaster) null else other.masterPos
+        }
+    }
+
+    override fun init() {
+        if (hasWorld() && world?.isClient == false && !isLoaded) {
+            isLoaded = true
+            val allNearby = detectNearby()
+            isValid = false
+            if (isValidStructure(allNearby)) {
+                logger.info("Final block placed in valid EnchantPedestal structure!")
+                isValid = true
+                val center = findCenterBlockOrNull(allNearby)!!
+                for(other in allNearby) {
+                    other.master = center
+                    other.others = allNearby.filter { it.pos != other.pos }
+                    other.isValid = isLoaded // Can only be true if it has loaded!
+                    other.sendUpdatePacket()
+                }
+                center.others = allNearby.filter { it.pos != center.pos }
+                center.master = center
+                center.sendUpdatePacket()
+            } else {
+                logger.info("Structure is not yet valid")
+            }
+        }
+    }
+
+    private fun detectNearby(): List<EnchantPedestalEntity> {
+        val result = mutableListOf(this)
+        for (i in -4..4 step 2) {
+            for (j in -4..4 step 2) {
+                if (i == 0 && j == 0)
+                    continue
+                val pos = BlockPos(pos.x+i, pos.y, pos.z+j)
+                val ent =  world!!.getBlockEntity(pos)
+                if (ent is EnchantPedestalEntity) {
+                    result.add(ent)
+                }
+            }
+        }
+        return result
+    }
+
+    private fun isValidStructure(): Boolean = isValidStructure(detectNearby())
+
+    private fun isValidStructure(nearby: List<EnchantPedestalEntity>): Boolean {
+        val centered = nearby.filter {
+            listOf(
+                BlockPosHelper.add(it.pos, -2, 0, 0),
+                BlockPosHelper.add(it.pos, 2, 0, 0),
+                BlockPosHelper.add(it.pos, 0, 0, -2),
+                BlockPosHelper.add(it.pos, 0, 0, 2)
+            ).all { pos ->
+                nearby.any { near -> near.pos == pos }
+            }
+        }
+
+        return(
+            (centered.size == 1) && (
+                (nearby.size == 5) ||
+                (
+                    (nearby.size == 9) &&
+                    listOf(
+                        BlockPosHelper.add(centered[0].pos, -2, 0, -2),
+                        BlockPosHelper.add(centered[0].pos, -2, 0, 2),
+                        BlockPosHelper.add(centered[0].pos, 2, 0, -2),
+                        BlockPosHelper.add(centered[0].pos, 2, 0, 2)
+                    ).all { pos ->
+                        nearby.any { near -> near.pos == pos }
+                    }
+                )
+            )
+        )
+    }
+
+    override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
-        logger.info("Writing NBT list...${inventory.getStack(0).item}")
-        nbt.putInt("tickCounter", tickCounter)
-        val targetPedestal2 = targetPedestal
-        if (targetPedestal2 != null)
-            nbt.putIntArray("targetPedestalPos", listOf(targetPedestal2.pos.x, targetPedestal2.pos.y, targetPedestal2.pos.z))
-        nbt.put("inventory", inventory.toNbtList())
-        return nbt
+        //inventory
+        nbt.put("inventory", _inventory.toNbtList())
+        //isLoaded
+        nbt.putBoolean("isLoaded", isLoaded)
+        //isValid
+        nbt.putBoolean("isValid", isValid)
+        //masterPos
+        masterPos?.let { nbt.putIntArray("masterPos", BlockPosHelper.toList(it)) }
+        //othersPos
+        val others = NbtCompound()
+        others.putInt("size", othersPos.size)
+        for (i in othersPos.indices) {
+            others.putIntArray("$i", BlockPosHelper.toList(othersPos[i]))
+        }
+        nbt.put("others", others)
+        _event?.let { nbt.put("event", it.toNbt()) }
     }
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
-        logger.info("Reading NBT list...${inventory.getStack(0).item}")
-        inventory = SimpleInventory(1)
-        this.inventory.readNbtList(nbt.getList("inventory", 10))
-        this.tickCounter = nbt.getInt("tickCounter")
-        if (nbt.contains("targetPedestalPos")) {
-            val pos = nbt.getIntArray("targetPedestalPos")
-            this.targetPedestal = world?.getBlockEntity(BlockPos(pos[0], pos[1], pos[2])) as? EnchantPedestalEntity
+        //inventory
+        _inventory = SimpleInventory(1)
+        _inventory.readNbtList(nbt.getList("inventory", 10))
+        //isLoaded
+        isLoaded = nbt.getBoolean("isLoaded")
+        //isValid
+        isValid = nbt.getBoolean("isValid")
+        //masterPos
+        if (nbt.contains("masterPos"))
+            masterPos = BlockPosHelper.fromArray(nbt.getIntArray("masterPos"))
+        //othersPos
+        val others = nbt.get("others") as NbtCompound?
+        val newOthers = mutableListOf<BlockPos>()
+        others?.let {
+            for (i in 0 until it.getInt("size")) {
+                newOthers.add(BlockPosHelper.fromArray(it.getIntArray("$i")))
+            }
         }
-        logger.info("Read NBT list...${inventory.getStack(0).item}")
+        othersPos = newOthers
+
+        //event
+        _event = if (nbt.contains("event"))
+            EnchantPedestalEvent.fromNbt(nbt.getCompound("event"))
+        else
+            null
+    }
+
+    private fun doEnchant(sender: PlayerEntity, staff: ItemStack) {
+        val enchantTarget: ItemStack = stack
+        val ingredients: List<ItemStack> = others.map { it.stack }.subtract(setOf(ItemStack.EMPTY)).toList()
+
+        // Check enchant target and ingredients
+        val ingredientItems = ingredients.map { it.item }
+        val recipe: EnchantPedestalRecipe
+        try {
+            recipe = recipes.first {
+                it.ingredients.size == ingredients.size &&
+                        it.ingredients.containsAll(ingredientItems) &&
+                        ingredientItems.containsAll(it.ingredients) &&
+                        it.input(enchantTarget, staff)
+            }
+        } catch (ex: NoSuchElementException) {
+            logger.info("The player, ${sender.displayName.asString()}, attempted to use an enchant pedestal but there was no matching recipe.")
+            return
+        }
+
+        if (sender.experienceLevel < recipe.xpAmount && !sender.isCreative) {
+            logger.info("The player, ${sender.displayName.asString()}, attempted to use an enchant pedestal but didn't have the xp to trigger a ritual.")
+            return
+        }
+
+        _event = EnchantPedestalEvent(sender, master!!.pos, recipe, if (sender.isCreative) 0 else ExperienceHelper.experienceToTake(sender.experienceLevel, recipe.xpAmount), ticksToConsumeComponent*(ingredients.size+1))
+        logger.info("The player, ${sender.displayName.asString()}, has begun an enchantment ritual. It will cost ${_event?.expToRemove} exp take 80 ticks to begin and ${ticksToConsumeComponent*(1+recipe.ingredients.size)} ticks to complete.")
+        sendUpdatePacket()
+    }
+
+    override fun outputDebugInfo(player: PlayerEntity) {
+        player.sendMessage(LiteralText("Debug: Enchant pedestal entity at $pos"), false)
+        player.sendMessage(LiteralText("isMaster: $isMaster"), false)
+        if (!isMaster)
+            player.sendMessage(LiteralText("Master: Enchant pedestal entity at ${master?.pos}"), false)
+        player.sendMessage(LiteralText("Is a valid structure: ${isValidStructure()}"), false)
+        player.sendMessage(LiteralText("Is blocking events: $isBlocking"), false)
+        player.sendMessage(LiteralText("Connected block entities: ${othersPos.size}"), false)
     }
 
     fun use(player: PlayerEntity): ActionResult {
-        logger.info("${player.name.asString()} is using EnchantPedestalEntity at $pos.")
-
-        if (tickCounter > 0 || targetPedestal != null)
-            return ActionResult.FAIL
-
         val playerItem: ItemStack = player.inventory.getStack(player.inventory.selectedSlot)
-        val blockItem: ItemStack = inventory.getStack(0)
+        val blockItem: ItemStack = stack
 
-        if (playerItem.item is XpStick) {
-            beginCrafting()
+        if (playerItem.item is StaffOfDebugging) {
+            outputDebugInfo(player)
             return ActionResult.SUCCESS
+        }
+
+        if (isBlocking) {
+            return ActionResult.FAIL
+        }
+
+        if (playerItem.item is IStaff && blockItem != ItemStack.EMPTY) {
+            if (isMaster) {
+                doEnchant(player, playerItem)
+                return ActionResult.SUCCESS
+            }
+            return ActionResult.FAIL
+        }
+
+        if (blockItem == ItemStack.EMPTY) {
+            if (playerItem != ItemStack.EMPTY) {
+                if (playerItem.count > 1) {
+                    playerItem.count -= 1
+                    player.inventory.setStack(player.inventory.selectedSlot, playerItem)
+                    stack = playerItem.copy()
+                    stack.count = 1
+                } else {
+                    stack = playerItem
+                    player.inventory.setStack(player.inventory.selectedSlot, ItemStack.EMPTY)
+                }
+                return ActionResult.SUCCESS
+            }
+        } else {
+            //prefer the current slot if eligible
+            val eligibleSlot: Int = if (playerItem.isEmpty || (playerItem.count < playerItem.item.maxCount && playerItem.item == stack.item)) {
+                player.inventory.selectedSlot
+            } else {
+                val firstSlotWithStack = player.inventory.getSlotWithStack(stack)
+                val firstEmptySlot = player.inventory.emptySlot
+                if (firstSlotWithStack >= 0 && player.inventory.getStack(firstSlotWithStack).count < stack.maxCount) {
+                    firstSlotWithStack
+                } else if (firstEmptySlot >= 0) {
+                    firstEmptySlot
+                } else {
+                    return ActionResult.FAIL
+                }
+            }
+            val eligibleStack = player.inventory.getStack(eligibleSlot)
+            if (eligibleStack.isEmpty) {
+                player.inventory.setStack(eligibleSlot, stack)
+            } else {
+                eligibleStack.count += 1
+                player.inventory.setStack(eligibleSlot, eligibleStack)
+            }
+            stack = ItemStack.EMPTY
         }
 
         if (playerItem == ItemStack.EMPTY && blockItem != ItemStack.EMPTY) {
             player.inventory.setStack(player.inventory.selectedSlot, blockItem)
-            inventory.setStack(0, ItemStack.EMPTY)
+            stack = ItemStack.EMPTY
             return ActionResult.SUCCESS
         } else if (playerItem != ItemStack.EMPTY && blockItem == ItemStack.EMPTY) {
             player.inventory.setStack(player.inventory.selectedSlot, ItemStack.EMPTY)
-            inventory.setStack(0, playerItem)
+            stack = playerItem
             return ActionResult.CONSUME
         }
         return ActionResult.PASS
@@ -90,128 +302,118 @@ class EnchantPedestalEntity(pos: BlockPos, state: BlockState) : BlockEntity(ModB
         return null
     }
 
-    private fun beginCrafting() {
-        // Search for pedestals in a 9x9 grid around the center block (1 block gap)
-        val enchantPedestals = listOf(
-            pos.add(-2, 0, -2),
-            pos.add(-2, 0, 0),
-            pos.add(-2, 0, 2),
-            pos.add(0, 0, -2),
-            pos.add(0, 0, 2),
-            pos.add(2, 0, -2),
-            pos.add(2, 0, 0),
-            pos.add(2, 0, 2)
-        ).mapNotNull {
-            world!!.getBlockEntity(it) as? EnchantPedestalEntity
-        }
-
-        enchantPedestals.forEach {
-            logger.info("\t- ${it.inventory.getStack(0).item}")
-        }
-
-        //TODO: For some reason this is null when it.isValid(...) is true???????
-        //It is too late for this nonsense
-        val recipe = recipes.firstOrNull { it.isValid(inventory.getStack(0), enchantPedestals.map { other -> other.inventory.getStack(0).item }) }
-
-        println("$recipe")
-        if (recipe == null)
+    override fun serverTick() {
+        if ((!isValid) || event == null)
             return
+        val e = event!!
+        if (isMaster) {
 
-        enchantPedestals.forEach {
-            it.targetPedestal = this
-        }
+            if (e.expToRemove > 0) {
+                e.expToRemove -= e.expToRemoveEachTick
+                e.player!!.addExperience(-e.expToRemoveEachTick)
 
-        serverCurrentRecipe = recipe
-
-        tickCounter = enchantPedestals.fold(ticksToConsumeComponent) { acc, enchantPedestalEntity ->
-            acc + (if (enchantPedestalEntity.inventory.getStack(0).isEmpty) 0 else ticksToConsumeComponent)
-        }
-        logger.info("Enchant pedestal crafting will take $tickCounter ticks")
-
-        logger.info("Beginning enchant pedestal crafting on ${inventory.getStack(0).item} using:")
-        enchantPedestals.forEach {
-            logger.info("\t- ${it.inventory.getStack(0).item}")
-            it.sendUpdatePacket()
-        }
-
-        serverProviderEnchantPedestals = enchantPedestals
-    }
-
-    fun serverTick() {
-        val prev = tickCounter
-        tickCounter = max(0, tickCounter-1)
-
-        if (prev == 1) {
-            this.inventory.setStack(0, serverCurrentRecipe?.output?.let { it(this.inventory.getStack(0)) })
-            this.sendUpdatePacket()
-            serverProviderEnchantPedestals?.forEach {
-                if (serverCurrentRecipe?.consumesIngredients == true) {
-                    it.inventory.setStack(0, ItemStack.EMPTY)
+                if (e.expToRemove < 10)
+                    sendUpdatePacket()
+                return
+            }
+            e.tickCounter = max(0, e.tickCounter-1)
+            if (e.tickCounter == 1) {
+                stack = e.recipe!!.output(stack)
+                _event = null
+                this.sendUpdatePacket()
+                others.forEach {
+                    if (e.recipe!!.consumesIngredients)
+                        it.stack = ItemStack.EMPTY
+                    it.sendUpdatePacket()
                 }
-                it.targetPedestal = null
-                it.sendUpdatePacket()
+                sendUpdatePacket()
             }
 
-            serverProviderEnchantPedestals = null
+            if (e.tickCounter == floor(ticksToConsumeComponent / 2.0).toInt()) {
+                sendUpdatePacket()
+            }
         }
-
-
     }
 
-    fun clientTick() {
-        if ((tickCounter == 0 && (targetPedestal?.tickCounter ?: 0) == 0) || inventory.getStack(0).isEmpty)
+    override fun clientTick() {
+        if ((!isValid) || event == null)
             return
-        // Local copy of target as it may be changed by another thread.
-        val target = targetPedestal
-        if (target == null) {
-            world?.addParticle(ParticleTypes.PORTAL, true, pos.x.toDouble()+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+0.5, Random.nextDouble(-1.0, 1.0), Random.nextDouble(0.0, 1.0), Random.nextDouble(-1.0, 1.0))
-            world?.addParticle(ParticleTypes.ENCHANT, true, pos.x.toDouble()+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+0.5, Random.nextDouble(-1.0, 1.0), Random.nextDouble(0.0, 1.0), Random.nextDouble(-1.0, 1.0))
-        } else {
-            val vector = BlockPosHelper.unitVector(pos, target.pos)
-            listOf(0.6, 1.0, 1.4).forEach {
-                world?.addParticle(ParticleTypes.ENCHANT, true, pos.x.toDouble()+(it*vector.x)+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+(it*vector.z)+0.5, vector.x*2, vector.y, vector.z*2)
-                world?.addParticle(ParticleTypes.REVERSE_PORTAL, true, pos.x.toDouble()+(it*vector.x)+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+(it*vector.z)+0.5, (vector.x*0.02)+Random.nextDouble(-0.01, 0.01), vector.y+Random.nextDouble(0.0, 0.01), (vector.z*0.02)+Random.nextDouble(-0.01, 0.01))
-            }
 
+        val e = event!!
+
+        if (stack == ItemStack.EMPTY)
+            return
+
+        val offset = sin(((world?.time ?: 0)).toDouble() / 8.0) / 4.0
+        val randomX = Random.nextDouble(-0.25, 0.25)
+        val randomY = Random.nextDouble(-0.2, 0.2)
+        val randomZ = Random.nextDouble(-0.25, 0.25)
+
+        if (e.expToRemove > 20) {
+            world?.addParticle(ParticleTypes.ENCHANT, true, pos.x.toDouble()+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+0.5, 2*randomX, 1.5*randomY, 2*randomZ)
+            return
         }
 
-
+        if (isMaster) {
+            world?.addParticle(ParticleTypes.PORTAL, true, pos.x.toDouble()+0.5, pos.y.toDouble()+1.0, pos.z.toDouble()+0.5, Random.nextDouble(-1.0, 1.0), Random.nextDouble(0.0, 1.0)+offset, Random.nextDouble(-1.0, 1.0))
+            world?.addParticle(ParticleTypes.ENCHANT, true, pos.x.toDouble()+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+0.5, 3*randomX, 2*randomY, 3*randomZ)
+        } else {
+            val mp = master?.pos ?: pos
+            val vector = BlockPosHelper.unitVector(mp, pos)
+            val randomOffset = Random.nextDouble(0.0, 1.0)
+            listOf(0.6, 1.0, 1.4).forEach { _ ->
+                world?.addParticle(ParticleTypes.ENCHANT, true, pos.x.toDouble()+0.5-(randomOffset*vector.x), pos.y.toDouble()+1.5, pos.z.toDouble()+0.5-(randomOffset*vector.z), 3*randomX, 2*randomY, 3*randomZ)
+                world?.addParticle(ParticleTypes.PORTAL, true, mp.x.toDouble()+0.5, mp.y.toDouble()+1.5+offset, mp.z.toDouble()+0.5, (vector.x*2)+randomX, randomY-1+offset, (vector.z*2)+randomZ)
+            }
+            if ((event?.tickCounter ?: 1000) < 30)
+                world?.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE, true, pos.x.toDouble()+0.5, pos.y.toDouble()+1.5, pos.z.toDouble()+0.5, 0.001*randomX, 0.001*abs(randomY), 0.001*randomZ)
+        }
     }
 
-    fun sendUpdatePacket() {
-        toUpdatePacket()
+    override fun eventCancelled() {
+        fun fireParticleAt(it: BlockEntity) {
+            val randomX = Random.nextDouble(-0.02, 0.02)
+            val randomY = Random.nextDouble(-0.05, 0.05)
+            val randomZ = Random.nextDouble(-0.02, 0.02)
+            world?.addParticle(ParticleTypes.FLAME, true, it.pos.x.toDouble()+0.5, it.pos.y.toDouble()+1.5, it.pos.z.toDouble()+0.5, 2*randomX, 1.5*randomY, 2*randomZ)
+        }
+
+        if (world?.isClient == true) {
+            for (i in 0..10) {
+                others.forEach {
+                    fireParticleAt(it)
+                }
+                fireParticleAt(this)
+            }
+        } else {
+            if (isMaster) {
+                world?.let { ExperienceOrbEntity.spawn(it as ServerWorld, BlockPosHelper.toVec3d(pos), (event?.let { e -> e.totalExpToRemove - e.expToRemove } ?: 0)) }
+            }
+        }
     }
+
+    override fun sendUpdatePacket() { toUpdatePacket() }
 
     companion object {
         const val ticksToConsumeComponent = 25
 
-        val recipes = listOf(
-            EnchantPedestalRecipe.getRecipe(
-                Enchantments.FORTUNE,
-                "minecraft:fortune",
-                listOf(Items.EMERALD, Items.EMERALD, Items.EMERALD_BLOCK, Items.EMERALD_BLOCK),
-                50
-            ),
-            EnchantPedestalRecipe.getRecipe(
-                ModEnchantments.endWeightEnchantment,
-                "xp_rituals:end_weight",
-                listOf(Items.ANVIL, Items.ENDER_PEARL, Items.ENDER_PEARL, Items.ENDER_PEARL),
-                50
-            ),
-            EnchantPedestalRecipe.getRecipe(
-                ModEnchantments.xpBoostEnchantment,
-                "xp_rituals:xp_boost",
-                listOf(ModItems.zombie_brains, ModItems.zombie_brains, ModItems.zombie_brains, ModItems.zombie_brains, Items.GOLD_INGOT, Items.GOLD_INGOT, Items.GOLD_INGOT, Items.GOLD_INGOT),
-                150
-            )
-        )
+        private fun findCenterBlockOrNull(nearby: List<EnchantPedestalEntity>): EnchantPedestalEntity? {
+            return nearby.firstOrNull {
+                listOf(
+                    BlockPosHelper.add(it.pos, -2, 0, 0),
+                    BlockPosHelper.add(it.pos, 2, 0, 0),
+                    BlockPosHelper.add(it.pos, 0, 0, -2),
+                    BlockPosHelper.add(it.pos, 0, 0, 2)
+                ).all { pos ->
+                    nearby.any { near -> near.pos == pos }
+                }
+            }
+        }
+
+        val recipes = EnchantPedestalRecipes.allRecipes
 
         fun tick(world: World, pos: BlockPos, state: BlockState, be: EnchantPedestalEntity) {
-            if (world.isClient) {
-                be.clientTick()
-            } else {
-                be.serverTick()
-            }
+            be.doTick(world)
         }
     }
 }

@@ -4,13 +4,13 @@
   "version": "${version}",
 
   "name": "XP Rituals",
-  "description": "Magic with XP",
+  "description": "Enchantment Rituals",
   "authors": [
-    "Me!"
+    "inky2013"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://ethanbrews.me/pages/xprituals.html",
+    "sources": "https://github.com/ethanbrews/xp-rituals"
   },
 
   "license": "CC0-1.0",
@@ -35,6 +35,16 @@
         "value": "me.ethanbrews.xprituals.XpRituals::server",
         "adapter": "kotlin"
       }
+    ],
+    "rei": [
+      {
+        "value": "me.ethanbrews.xprituals.plugins.rei.ReiServerPlugin",
+        "adapter": "kotlin"
+      },
+      {
+        "value": "me.ethanbrews.xprituals.plugins.rei.ReiClientPlugin",
+        "adapter": "kotlin"
+      }
     ]
   },
   "mixins": [
@@ -44,7 +54,7 @@
     "fabricloader": ">=0.8.7",
     "fabric": "*",
     "fabric-language-kotlin": "*",
-    "minecraft": "1.17.x"
+    "minecraft": "1.18.x"
   },
   "suggests": {
     "flamingo": "*"

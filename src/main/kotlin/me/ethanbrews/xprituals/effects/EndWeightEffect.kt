@@ -1,5 +1,9 @@
 package me.ethanbrews.xprituals.effects
 
-class EndWeightEffect {
-    //TODO: Find out how to do this...
+import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.entity.effect.StatusEffectCategory
+import net.minecraft.potion.Potion
+
+class EndWeightEffect : StatusEffect(StatusEffectCategory.HARMFUL, 0x2b5c34) {
+    // The actual effect is handled by a mixin...
 }

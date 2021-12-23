@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "xp_rituals:item/xp_stick"
+    "layer0": "xp_rituals:item/staff_of_knowledge"
   }
 }

@@ -1,6 +1,20 @@
 {
-  "item.xp_rituals.xp_stick": "XP Stick",
-  "item.xp_rituals.xp_stick.tooltip1": "Knock the experience out of your enemy!",
-  "item.xp_rituals.xp_stick.tooltip2": "Doubles the total experience dropped"
+  "item.xp_rituals.staff_of_knowledge": "Staff of Knowledge",
+  "item.xp_rituals.staff_of_knowledge.tooltip1": "A mystical staff used to command enchantment rituals",
+  "item.xp_rituals.staff_of_knowledge.tooltip2": "Mobs will drop experience when attacked with this staff",
+
+  "itemGroup.xp_rituals.general": "Xp Rituals",
+
+  "item.xp_rituals.staff_of_greater_knowledge": "Staff of Greater Knowledge",
+  "item.xp_rituals.staff_of_greater_knowledge.tooltip1": "A mystical staff used to command enchantment rituals",
+  "item.xp_rituals.staff_of_greater_knowledge.tooltip2": "Mobs will drop experience when attacked with this staff",
+
+  "item.xp_rituals.staff_of_debugging": "Staff of Debugging",
+  "item.xp_rituals.staff_of_debugging.tooltip1": "[Creative Only] Use on blocks from",
+  "item.xp_rituals.staff_of_debugging.tooltip2": "XP Rituals to get a debug output in chat.",
+
+  "block.xp_rituals.enchant_pedestal": "Enchantment Pedestal",
+  "enchantment.xp_rituals.xp_boost": "Experience Boost",
+  "item.xp_rituals.zombie_brain": "Zombie Brain"
 }
 

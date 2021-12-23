@@ -4,6 +4,7 @@ import me.ethanbrews.xprituals.IMixedMobEntity;
 import net.minecraft.entity.mob.MobEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Inject;
 
 // The class must implement an interface, so it can be cast to in the rest of the program.
 @Mixin(MobEntity.class)
