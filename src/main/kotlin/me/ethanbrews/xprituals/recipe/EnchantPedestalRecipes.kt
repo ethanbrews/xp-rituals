@@ -448,7 +448,7 @@ object EnchantPedestalRecipes {
             listOf(Items.NETHER_STAR, Items.DIAMOND, Items.NETHER_STAR, Items.DIAMOND),
             10,
             true
-        )
+        ).withOutputRecipeName("Staff of Greater Knowledge")
     )
 
     val allRecipes = minecraftEnchantments + modEnchantments + modItems

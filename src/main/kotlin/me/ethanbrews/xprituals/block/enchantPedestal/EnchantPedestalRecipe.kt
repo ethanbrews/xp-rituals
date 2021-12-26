@@ -18,8 +18,14 @@ data class EnchantPedestalRecipe(
     val xpAmount: Int,
     val consumesIngredients: Boolean = true
 ) {
-    companion object {
+    var outputRecipeName: String? = null
 
+    fun withOutputRecipeName(name: String): EnchantPedestalRecipe {
+        outputRecipeName = name
+        return this
+    }
+
+    companion object {
         fun canGiveOrUpgradeEnchantment(enchantment: Enchantment, stack: ItemStack): Boolean {
             val index = stack.enchantments.indexOfFirst { (it as NbtCompound).getString("id") == Registry.ENCHANTMENT.getId(enchantment).toString() }
             val correctItem = enchantment.isAcceptableItem(stack)
@@ -43,6 +49,6 @@ data class EnchantPedestalRecipe(
             ingredients,
             xpAmount,
             consumesIngredients
-        )
+        ).withOutputRecipeName(Registry.ENCHANTMENT.getId(enchantment).toString())
     }
 }

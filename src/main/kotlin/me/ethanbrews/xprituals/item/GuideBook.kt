@@ -12,7 +12,7 @@ import vazkii.patchouli.api.PatchouliAPI
 
 class GuideBook() : Item(Settings()) {
     override fun use(world: World, user: PlayerEntity, hand: Hand?): TypedActionResult<ItemStack> {
-        if (!world.isClient) {
+        if (world.isClient) {
             PatchouliAPI.get().openBookGUI(user as ServerPlayerEntity, id("xp-rituals"))
             return TypedActionResult.success(user.getStackInHand(hand))
         }
