@@ -20,8 +20,8 @@ object XpRituals {
 		LootTableLoadingCallback.EVENT.register(LootTableLoadingCallback {
 				resourceManager, lootManager, identifier, supplier, setter -> LootTables.registerLoot(resourceManager, lootManager, identifier, supplier, setter)
 		})
-		CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback {
-				dispatcher, isDedicated -> Commands.registerCommands(dispatcher, isDedicated)
+		CommandRegistrationCallback.EVENT.register(CommandRegistrationCallback { dispatcher, isDedicated ->
+			Commands.registerCommands(dispatcher, isDedicated)
 		})
 	}
 

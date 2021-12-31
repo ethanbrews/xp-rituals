@@ -23,7 +23,7 @@ object ModItems {
     val tier2Staff = StaffOfKnowledge2()
     val zombie_brains = Item(defaultItemSettings)
     private val debug_stick = StaffOfDebugging()
-    private val enchant_pedestal_item = BlockItem(ModBlocks.enchant_pedestal_block, defaultItemSettings)
+    private val enchant_pedestal_item = BlockItem(ModBlocks.enchant_pedestal_block, defaultItemSettings.maxCount(64))
     //private val respawn_lens = RespawnLens()
     private val guide_book = GuideBook()
 
